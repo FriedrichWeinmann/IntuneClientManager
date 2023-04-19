@@ -1,24 +1,31 @@
-﻿function Start-IcmSynchronization
-{
+﻿function Start-IcmSynchronization {
 	[CmdletBinding()]
 	param (
 		[string[]]
 		$ComputerName,
 
 		[PSCredential]
-		$Credential
+		$Credential,
+
+		[switch]
+		$Wait
 	)
 
 	begin {
 		$code = {
-			Get-ScheduledTask "Schedule to run OMADMClient by client" | Start-ScheduledTask
-			Get-ScheduledTask "Schedule #3 created by enrollment client" | Start-ScheduledTask
-			Get-Service "IntuneManagementExtension" | Restart-Service
+			param ( $Wait )
+			Get-ScheduledTask | Where-Object TaskName -EQ 'PushLaunch' | Start-ScheduledTask
+			if (-not $Wait) { return }
+			
+			while ((Get-ScheduledTask | Where-Object TaskName -EQ 'PushLaunch').State -ne 'Ready') {
+				Start-Sleep -Seconds 1
+			}
 		}
 	}
 	process {
 		$param = @{
 			ScriptBlock = $code
+			ArgumentList = $Wait
 		}
 		if ($ComputerName) { $param.ComputerName = $ComputerName }
 		if ($Credential) { $param.Credential = $Credential }

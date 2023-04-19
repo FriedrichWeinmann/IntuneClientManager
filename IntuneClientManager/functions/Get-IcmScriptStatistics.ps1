@@ -21,7 +21,8 @@
 					}
 				}
 				foreach ($node in Get-ChildItem $mainNode.PSPath) {
-					$lastExecution = [Datetime]::ParseExact((Get-ItemProperty -Path $node.PSPath).LastExecution, 'dd/MM/yyyy HH:mm:ss', $null)
+					try { $lastExecution = [Datetime]::ParseExact((Get-ItemProperty -Path $node.PSPath).LastExecution, 'dd/MM/yyyy HH:mm:ss', $null) }
+					catch { $lastExecution = (Get-ItemProperty -Path $node.PSPath).LastExecution }
 					$results["$($mainNode.PSChildName):$($node.PSChildName -replace '_.+')"] = @{
 						PSTypeName    = 'IntuneClientManager.Statistics.Script'
 						ComputerName  = $env:COMPUTERNAME
